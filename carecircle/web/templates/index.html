@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0d1020" />
+  <title>CareCircle</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Phone frame: collapses to full-screen on real mobile, framed on desktop -->
+  <div class="phone">
+    <header class="topbar">
+      <div class="brand">🌙 CareCircle</div>
+      <div class="subtitle">Your AI family member</div>
+    </header>
+
+    <!-- ============ SCREEN 1: CAPTURE ============ -->
+    <section class="screen active" id="screen-capture">
+      <div class="card camera" id="cameraFeed">
+        <span class="card-label light">Camera feed</span>
+        <p class="hint light">Photograph a pill bottle, a symptom, or a prescription so the AI can see what you describe.</p>
+        <button class="fab camera-btn" id="cameraBtn" aria-label="Capture photo">📷</button>
+      </div>
+
+      <div class="card details" id="detailsCard">
+        <span class="card-label light">Details being sent to the AI</span>
+        <p class="transcript" id="transcript">Tap the microphone and describe how your loved one is doing today…</p>
+        <button class="fab mic-btn" id="micBtn" aria-label="Start voice input">🎙️</button>
+      </div>
+
+      <button class="primary-btn" id="analyzeBtn">Analyze with CareCircle</button>
+    </section>
+
+    <!-- ============ SCREEN 2: TODAY (SUGGESTIONS + CALENDAR) ============ -->
+    <section class="screen" id="screen-dashboard">
+      <div class="card suggestions">
+        <span class="card-label">Suggestions for today</span>
+        <div class="score-pill" id="scorePill">CareScore —</div>
+        <ul id="suggestionList"><li>Loading…</li></ul>
+      </div>
+
+      <div class="card calendar-card">
+        <span class="card-label">This week</span>
+        <table class="calendar">
+          <thead>
+            <tr><th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th></tr>
+          </thead>
+          <tbody id="calBody"><tr><td colspan="7">…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ SCREEN 3: SUMMARY / NOTIFICATION ============ -->
+    <section class="screen" id="screen-notify">
+      <div class="card notify">
+        <span class="card-label">Telegram notification</span>
+        <div class="notify-body" id="notifyBody">
+          <div class="notify-row"><span class="lbl">Care score:</span> <span id="n-score">—</span></div>
+          <div class="notify-row"><span class="lbl">Medication:</span> <span id="n-med">—</span></div>
+          <div class="notify-row"><span class="lbl">Activity:</span> <span id="n-act">—</span></div>
+          <div class="notify-row"><span class="lbl">Sleep:</span> <span id="n-sleep">—</span></div>
+          <div class="notify-row"><span class="lbl">Weather today:</span> <span id="n-weather">—</span></div>
+          <div class="notify-row"><span class="lbl">Upcoming on calendar:</span> <span id="n-cal">—</span></div>
+          <div class="notify-row"><span class="lbl">Important notes:</span> <span id="n-notes">—</span></div>
+        </div>
+      </div>
+      <p class="auto-note">🌙 An automatic summary is sent to your family every morning.</p>
+      <button class="primary-btn" id="sendBtn">Send to family now</button>
+      <p class="sent-status" id="sentStatus"></p>
+    </section>
+
+    <!-- ============ SCREEN 4: HISTORY ============ -->
+    <section class="screen" id="screen-history">
+      <div class="card history">
+        <span class="card-label">Medical history</span>
+        <div class="profile-grid" id="profileGrid">
+          <div class="profile-item"><span class="lbl">Name</span><b id="h-name">—</b></div>
+          <div class="profile-item"><span class="lbl">Age</span><b id="h-age">—</b></div>
+          <div class="profile-item"><span class="lbl">Gender</span><b id="h-gender">—</b></div>
+          <div class="profile-item"><span class="lbl">Weight</span><b id="h-weight">—</b></div>
+          <div class="profile-item"><span class="lbl">Height</span><b id="h-height">—</b></div>
+          <div class="profile-item"><span class="lbl">Blood type</span><b id="h-blood">—</b></div>
+        </div>
+      </div>
+
+      <div class="card history">
+        <span class="card-label">Conditions &amp; care</span>
+        <div class="tag-block"><span class="lbl">Conditions</span><div id="h-conditions" class="tags"></div></div>
+        <div class="tag-block"><span class="lbl">Allergies</span><div id="h-allergies" class="tags warn"></div></div>
+        <div class="tag-block"><span class="lbl">Past injuries</span><div id="h-injuries" class="tags"></div></div>
+        <div class="tag-block"><span class="lbl">Medications</span><div id="h-meds" class="tags"></div></div>
+      </div>
+
+      <div class="card history">
+        <span class="card-label">Important notes</span>
+        <p id="h-notes" class="history-text">—</p>
+        <p class="lbl" style="margin-top:12px;">Primary doctor</p>
+        <p id="h-doctor" class="history-text">—</p>
+        <p class="lbl" style="margin-top:12px;">Emergency note</p>
+        <p id="h-emergency" class="history-text">—</p>
+      </div>
+    </section>
+
+    <!-- Bottom navigation -->
+    <nav class="nav">
+      <button class="nav-btn active" data-target="screen-capture">Capture</button>
+      <button class="nav-btn" data-target="screen-dashboard">Today</button>
+      <button class="nav-btn" data-target="screen-notify">Summary</button>
+      <button class="nav-btn" data-target="screen-history">History</button>
+    </nav>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
