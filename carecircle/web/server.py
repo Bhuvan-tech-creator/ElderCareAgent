@@ -15,7 +15,7 @@ Authenticated, per-user endpoints:
   GET  /api/profile        -> elder medical profile (History)
   POST /api/profile        -> update the medical profile
   POST /api/guard          -> test the security guard
-  GET  /api/health         -> status + rate-limit headroom
+  GET  /api/health         -> status + rate-limit headroom + live LLM status
 
 Sessions are signed with itsdangerous (SESSION_SECRET).
 """
@@ -34,6 +34,7 @@ from ..security import guard_input
 from ..config import config
 from ..ratelimit import api_limiter
 from ..scheduler import DailySummaryScheduler
+from ..llm import get_client_status
 from .. import db, store
 
 BASE = os.path.dirname(__file__)
@@ -242,4 +243,5 @@ async def health():
         "rate_limit_remaining": api_limiter.remaining(),
         "daily_summary_enabled": config.ENABLE_DAILY_SUMMARY,
         "daily_summary_time": f"{config.DAILY_SUMMARY_HOUR:02d}:{config.DAILY_SUMMARY_MINUTE:02d}",
+        "llm": get_client_status(),
     }

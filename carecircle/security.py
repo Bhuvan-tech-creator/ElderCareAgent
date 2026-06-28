@@ -13,6 +13,7 @@ SECURITY FEATURES (Kaggle key concept) — two layers:
    an agent that has access to real tools (calendar, emergency dialing, etc.).
 """
 
+import traceback
 from cryptography.fernet import Fernet
 from .config import config
 
@@ -50,8 +51,22 @@ _INJECTION_PATTERNS = [
 
 def heuristic_is_malicious(text: str) -> bool:
     """Fast, offline first-pass check."""
-    low = text.lower()
+    low = (text or "").lower()
     return any(p in low for p in _INJECTION_PATTERNS)
+
+
+def _build_guard_client():
+    """
+    Build a Groq client for the guard using the same robust strategy as llm.py
+    so an httpx/proxies version mismatch never silently breaks the guard.
+    """
+    from groq import Groq
+    try:
+        return Groq(api_key=config.GROQ_API_KEY)
+    except Exception:
+        import httpx
+        http_client = httpx.Client(timeout=30.0)
+        return Groq(api_key=config.GROQ_API_KEY, http_client=http_client)
 
 
 def guard_input(text: str) -> dict:
@@ -60,6 +75,12 @@ def guard_input(text: str) -> dict:
     Returns {"safe": bool, "reason": str, "score": float}.
     Falls back to the heuristic check if the model is unavailable.
     """
+    text = text or ""
+
+    # Empty input is trivially safe (nothing to screen).
+    if not text.strip():
+        return {"safe": True, "reason": "Empty input.", "score": 0.0}
+
     # Always run the cheap heuristic first.
     if heuristic_is_malicious(text):
         return {"safe": False, "reason": "Heuristic detected injection pattern.", "score": 0.95}
@@ -68,25 +89,37 @@ def guard_input(text: str) -> dict:
         return {"safe": True, "reason": "Guard offline; heuristic passed.", "score": 0.0}
 
     try:
-        from groq import Groq
-        client = Groq(api_key=config.GROQ_API_KEY)
-        # Prompt Guard 2 returns a jailbreak probability as plain text.
+        client = _build_guard_client()
+        # Prompt Guard 2 returns a jailbreak probability (or a label) as text.
         resp = client.chat.completions.create(
             model=config.GROQ_GUARD_MODEL,
             messages=[{"role": "user", "content": text[:512]}],
             temperature=0,
         )
-        raw = resp.choices[0].message.content.strip()
+        raw = (resp.choices[0].message.content or "").strip()
+
+        # Try to parse a float probability first.
+        score = None
         try:
             score = float(raw)
         except ValueError:
-            score = 0.0
+            # Some deployments return a label such as "LABEL_1"/"LABEL_0"
+            # or "jailbreak"/"benign". Map those sensibly.
+            low = raw.lower()
+            if "1" in low or "jailbreak" in low or "unsafe" in low:
+                score = 0.9
+            else:
+                score = 0.0
+
         safe = score < 0.5
         return {
             "safe": safe,
             "reason": "Prompt Guard 2 score" if safe else "Prompt Guard 2 flagged jailbreak.",
             "score": score,
         }
-    except Exception as e:
-        # Fail safe: if guard errors, fall back to heuristic result (already passed).
-        return {"safe": True, "reason": f"Guard error, heuristic passed ({e}).", "score": 0.0}  
+    except Exception as e:  # noqa: BLE001
+        # Fail safe: if guard errors, fall back to heuristic result (already passed),
+        # but print the traceback so the cause is visible.
+        print(f"[CareCircle] Prompt guard error, heuristic fallback used: {e}")
+        traceback.print_exc()
+        return {"safe": True, "reason": f"Guard error, heuristic passed ({e}).", "score": 0.0}

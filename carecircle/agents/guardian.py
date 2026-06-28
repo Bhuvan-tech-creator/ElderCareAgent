@@ -15,8 +15,9 @@ class GuardianAgent(BaseAgent):
         "You are GUARDIAN, the calm emergency coordinator of CareCircle. You assess "
         "whether a situation needs escalation. You produce a clear, prioritized action "
         "plan and a short alert message. You are decisive but never cause panic. "
-        "If a CareScore is in 'Concern' band or vitals/behaviour are abnormal, you "
-        "recommend contacting family in priority order and, if critical, emergency services."
+        "If a CareScore is in 'Concern' band, vitals/behaviour are abnormal, concerning "
+        "symptoms are reported, or a risky extra/OTC medication was taken, you recommend "
+        "contacting family in priority order and, if critical, emergency services."
     )
 
     def run(self, payload: dict) -> AgentResult:
@@ -25,16 +26,23 @@ class GuardianAgent(BaseAgent):
         night_watch = payload.get("night_watch", {})
         contacts = payload.get("contacts", [])
         weather_risk = payload.get("weather_risk", "")
+        symptoms = payload.get("symptoms", [])
+        extra_meds = payload.get("extra_meds", [])
 
-        # Deterministic escalation trigger.
-        escalate = band == "Concern" or night_watch.get("bathroom_visits", 0) >= 4
+        # Deterministic escalation trigger (now includes symptoms).
+        escalate = (
+            band == "Concern"
+            or night_watch.get("bathroom_visits", 0) >= 4
+            or len(symptoms) >= 2
+        )
 
         user = (
             f"CareScore band: {band} ({care_score}). "
             f"Night watch data: {night_watch}. Weather risk: {weather_risk}. "
+            f"Reported symptoms: {symptoms}. Extra/OTC meds: {extra_meds}. "
             f"Priority contacts: {contacts}. Escalate flag: {escalate}.\n"
-            "Return JSON: severity (low|medium|high), action_plan (list), "
-            "alert_message (string under 60 words)."
+            "Return ONLY a JSON object with keys: severity (low|medium|high), "
+            "action_plan (list), alert_message (string under 60 words)."
         )
         plan = self.think_json(user)
 

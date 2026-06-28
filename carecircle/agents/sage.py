@@ -14,9 +14,10 @@ class SageAgent(BaseAgent):
     domain = "health_patterns"
     persona = (
         "You are SAGE, a careful geriatric health-pattern analyst inside CareCircle. "
-        "You synthesize medication adherence, activity, sleep, and behavioral "
-        "consistency into insight. You explain WHY a score moved and what to watch. "
-        "You forecast a 72-hour risk window but never diagnose. Be precise and calm."
+        "You synthesize medication adherence, activity, sleep, behavioral "
+        "consistency, and any reported symptoms into insight. You explain WHY a score "
+        "moved and what to watch. You forecast a 72-hour risk window but never diagnose. "
+        "Be precise and calm."
     )
 
     @staticmethod
@@ -52,13 +53,17 @@ class SageAgent(BaseAgent):
 
     def run(self, payload: dict) -> AgentResult:
         signals = payload.get("signals", {})
+        symptoms = payload.get("symptoms", [])
         scored = self.compute_care_score(signals)
 
         user = (
             f"CareScore: {scored['care_score']} ({scored['band']}). "
-            f"Pillars: {scored['pillars']}. Recent signals: {signals}.\n"
-            "Return JSON: explanation (1 sentence), risk_window_72h (string), "
-            "suggestions (list of 3 short daily suggestions)."
+            f"Pillars: {scored['pillars']}. Recent signals: {signals}. "
+            f"Reported symptoms: {symptoms}.\n"
+            "Return ONLY a JSON object with keys: explanation (1 sentence on why the "
+            "score is where it is, referencing the strongest pillar or any symptoms), "
+            "risk_window_72h (string), "
+            "suggestions (list of 3 short daily suggestions tailored to the signals)."
         )
         analysis = self.think_json(user)
 
