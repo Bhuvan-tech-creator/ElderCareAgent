@@ -1,5 +1,12 @@
 /* CareCircle front-end logic — vanilla JS, no build step. */
 
+// --- Redirect to login if a request comes back unauthorized ---
+async function api(url, options){
+  const res = await fetch(url, options);
+  if (res.status === 401) { window.location.href = '/login'; throw new Error('Not authenticated'); }
+  return res;
+}
+
 // --- Screen navigation ---
 const navBtns = document.querySelectorAll('.nav-btn');
 const screens = document.querySelectorAll('.screen');
@@ -11,6 +18,13 @@ navBtns.forEach(btn => btn.addEventListener('click', () => {
   if (btn.dataset.target === 'screen-dashboard') loadDashboard();
   if (btn.dataset.target === 'screen-history') loadHistory();
 }));
+
+// --- Logout ---
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) logoutBtn.addEventListener('click', async () => {
+  await fetch('/api/logout', { method:'POST' });
+  window.location.href = '/login';
+});
 
 // --- Camera capture (uses device camera where available) ---
 const cameraBtn = document.getElementById('cameraBtn');
@@ -61,7 +75,7 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
   btn.textContent = 'Thinking…'; btn.disabled = true;
   const transcript = transcriptEl.textContent.startsWith('Tap the microphone') ? '' : transcriptEl.textContent;
   try {
-    const res = await fetch('/api/analyze', {
+    const res = await api('/api/analyze', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ transcript })
     });
@@ -71,13 +85,13 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     }
     fillNotification(data);
     document.querySelector('[data-target="screen-notify"]').click();
-  } catch(e) { alert('Error: ' + e); }
+  } catch(e) { console.error(e); }
   btn.textContent = 'Analyze with CareCircle'; btn.disabled = false;
 });
 
 // --- Today (dashboard) ---
 async function loadDashboard(){
-  const res = await fetch('/api/dashboard');
+  const res = await api('/api/dashboard');
   const data = await res.json();
   const pill = document.getElementById('scorePill');
   pill.textContent = `CareScore ${data.care_score} · ${data.band}`;
@@ -115,7 +129,7 @@ function fillNotification(d){
 document.getElementById('sendBtn').addEventListener('click', async () => {
   const status = document.getElementById('sentStatus');
   status.textContent = 'Sending…';
-  const res = await fetch('/api/send-summary', {
+  const res = await api('/api/send-summary', {
     method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ transcript:'' })
   });
   const data = await res.json();
@@ -126,7 +140,7 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
 
 // --- History ---
 async function loadHistory(){
-  const res = await fetch('/api/profile');
+  const res = await api('/api/profile');
   const data = await res.json();
   const p = data.profile || {};
   const e = data.elder || {};

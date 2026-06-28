@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0d1020" />
+  <title>CareCircle — Sign in</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="phone">
+    <header class="topbar">
+      <div class="brand">🌙 CareCircle</div>
+      <div class="subtitle">Your AI family member</div>
+    </header>
+
+    <div class="screen active" id="auth-screen">
+
+      <!-- Tab switch -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-mode="login" id="tab-login">Sign in</button>
+        <button class="auth-tab" data-mode="register" id="tab-register">Create account</button>
+      </div>
+
+      <!-- ============ LOGIN ============ -->
+      <div class="card auth-card" id="login-card">
+        <span class="card-label">Welcome back</span>
+        <label class="field"><span>Username</span>
+          <input type="text" id="login-username" placeholder="e.g. anita_family" autocomplete="username" />
+        </label>
+        <label class="field"><span>Password</span>
+          <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password" />
+        </label>
+        <button class="primary-btn" id="login-btn">Sign in</button>
+        <p class="auth-msg" id="login-msg"></p>
+      </div>
+
+      <!-- ============ REGISTER ============ -->
+      <div class="card auth-card hidden" id="register-card">
+        <span class="card-label">Create your account</span>
+        <p class="hint" style="max-width:100%;color:var(--muted);margin-bottom:6px;">
+          Fill in your loved one's details. The greyed-out text in each box is an example —
+          replace it with your own information.
+        </p>
+
+        <label class="field"><span>Username</span>
+          <input type="text" id="reg-username" placeholder="e.g. anita_family" autocomplete="username" />
+        </label>
+        <label class="field"><span>Password (min 6 characters)</span>
+          <input type="password" id="reg-password" placeholder="Create a password" autocomplete="new-password" />
+        </label>
+
+        <div class="section-label">Loved one's profile</div>
+
+        <label class="field"><span>Name</span>
+          <input type="text" id="p-name" placeholder="Grandma Devi" />
+        </label>
+
+        <div class="field-row">
+          <label class="field"><span>Age</span>
+            <input type="number" id="p-age" placeholder="74" />
+          </label>
+          <label class="field"><span>Gender</span>
+            <input type="text" id="p-gender" placeholder="Female" />
+          </label>
+        </div>
+
+        <div class="field-row">
+          <label class="field"><span>Weight (kg)</span>
+            <input type="number" id="p-weight" placeholder="62" />
+          </label>
+          <label class="field"><span>Height (cm)</span>
+            <input type="number" id="p-height" placeholder="158" />
+          </label>
+        </div>
+
+        <div class="field-row">
+          <label class="field"><span>Blood type</span>
+            <input type="text" id="p-blood" placeholder="B+" />
+          </label>
+          <label class="field"><span>Language</span>
+            <input type="text" id="p-language" placeholder="English" />
+          </label>
+        </div>
+
+        <label class="field"><span>Conditions (comma separated)</span>
+          <input type="text" id="p-conditions" placeholder="Type 2 Diabetes, Hypertension" />
+        </label>
+        <label class="field"><span>Allergies (comma separated)</span>
+          <input type="text" id="p-allergies" placeholder="Penicillin, Peanuts" />
+        </label>
+        <label class="field"><span>Past injuries (comma separated)</span>
+          <input type="text" id="p-injuries" placeholder="Hip fracture (2021, healed), Mild arthritis in knees" />
+        </label>
+        <label class="field"><span>Important history notes</span>
+          <textarea id="p-notes" rows="2" placeholder="Cataract surgery in 2019. No history of heart attack or stroke."></textarea>
+        </label>
+        <label class="field"><span>Primary doctor</span>
+          <input type="text" id="p-doctor" placeholder="Dr. Mehta (Cardiology)" />
+        </label>
+        <label class="field"><span>Emergency note</span>
+          <input type="text" id="p-emergency" placeholder="Keeps glucose tablets in bedside drawer." />
+        </label>
+
+        <button class="primary-btn" id="register-btn">Create account &amp; continue</button>
+        <p class="auth-msg" id="register-msg"></p>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/static/login.js"></script>
+</body>
+</html>

@@ -4,9 +4,9 @@ orchestrator.py
 MULTI-AGENT ORCHESTRATOR (ADK root-agent pattern).
 
 The orchestrator owns the four specialized agents and coordinates a full
-"care cycle": it gathers signals, runs each agent in the right order
-(VITA -> SAGE -> GUARDIAN -> ECHO), composes the final family summary,
-and dispatches the Telegram notification.
+"care cycle" for a SPECIFIC user: it loads that user's encrypted record,
+runs each agent in order (VITA -> SAGE -> GUARDIAN -> ECHO), composes the
+final family summary, and dispatches the Telegram notification.
 
 This is the heart of CareCircle's multi-agent system.
 """
@@ -25,8 +25,8 @@ class Orchestrator:
         self.guardian = GuardianAgent()
         self.echo = EchoAgent()
 
-    def run_care_cycle(self, elder_note: str = "") -> dict:
-        data = store.load()
+    def run_care_cycle(self, username: str, elder_note: str = "") -> dict:
+        data = store.load(username)
         culture = data["elder"].get("culture", {})
 
         # 1) VITA: medication intelligence.
@@ -72,6 +72,7 @@ class Orchestrator:
         })
 
         # 7) Build the structured Telegram summary (matches the design mockup).
+        elder_name = data["elder"].get("name", "your loved one")
         summary_payload = {
             "care_score": {"care_score": sage.output["care_score"], "band": sage.output["band"]},
             "medication": f"{vita.output['adherence_pct']}% adherence. "
@@ -82,7 +83,7 @@ class Orchestrator:
             "calendar": cal_str,
             "notes": data.get("notes", "—"),
         }
-        telegram_text = telegram_tool.format_care_summary(summary_payload)
+        telegram_text = telegram_tool.format_care_summary(summary_payload, elder_name=elder_name)
 
         return {
             "vita": vita.output,
@@ -95,8 +96,8 @@ class Orchestrator:
             "summary_payload": summary_payload,
         }
 
-    def send_summary(self, elder_note: str = "") -> dict:
-        result = self.run_care_cycle(elder_note)
+    def send_summary(self, username: str, elder_note: str = "") -> dict:
+        result = self.run_care_cycle(username, elder_note)
         send = telegram_tool.send_message(result["telegram_text"])
         result["telegram_send"] = send
         return result

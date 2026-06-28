@@ -26,11 +26,11 @@ def send_message(text: str) -> dict:
         return {"ok": False, "error": str(e)}
 
 
-def format_care_summary(data: dict) -> str:
+def format_care_summary(data: dict, elder_name: str = "your loved one") -> str:
     """Formats the notification EXACTLY like the uploaded design mockup."""
     cs = data.get("care_score", {})
     return (
-        "🏡 <b>CareCircle — Daily Summary</b>\n\n"
+        f"🌙 <b>CareCircle — Daily Summary for {elder_name}</b>\n\n"
         f"<b>Care score:</b> {cs.get('care_score', '—')}/100 ({cs.get('band', '—')})\n\n"
         f"<b>Medication:</b> {data.get('medication', '—')}\n\n"
         f"<b>Activity:</b> {data.get('activity', '—')}\n\n"

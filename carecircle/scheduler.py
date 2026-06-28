@@ -1,30 +1,36 @@
 """
 scheduler.py
 ------------
-Background scheduler that AUTOMATICALLY sends the daily family summary to the
-Telegram group chat every morning at a configured time (default 08:00 local).
+Background scheduler that AUTOMATICALLY sends the daily family summary every
+morning at a configured time (default 08:00 local) for EVERY registered user.
 
 This is what turns CareCircle from a manual app into an *ambient* one: families
-wake up to a calm summary without anyone pressing a button. The manual
-"Send to family" button still works for on-demand sends.
-
-Implemented with a lightweight daemon thread (no external scheduler dependency)
-so deployment stays simple.
+wake up to a calm summary without anyone pressing a button.
 """
 
 import threading
 import time
+import sqlite3
 from datetime import datetime, timedelta
 from .config import config
+from . import db
 
 
 class DailySummaryScheduler:
-    def __init__(self, send_callable) -> None:
-        """send_callable: a zero-arg function that runs + sends the summary."""
-        self._send = send_callable
+    def __init__(self, send_for_user) -> None:
+        """send_for_user: a function taking a username that sends their summary."""
+        self._send_for_user = send_for_user
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
         self._last_sent_date = None
+
+    def _all_usernames(self) -> list[str]:
+        try:
+            with db._connect() as conn:
+                rows = conn.execute("SELECT username FROM users").fetchall()
+            return [r["username"] for r in rows]
+        except sqlite3.Error:
+            return []
 
     def _seconds_until_next_run(self) -> float:
         now = datetime.now()
@@ -40,7 +46,6 @@ class DailySummaryScheduler:
     def _loop(self) -> None:
         while not self._stop.is_set():
             wait = self._seconds_until_next_run()
-            # Sleep in short chunks so we can stop promptly on shutdown.
             slept = 0.0
             while slept < wait and not self._stop.is_set():
                 chunk = min(30.0, wait - slept)
@@ -50,12 +55,13 @@ class DailySummaryScheduler:
                 break
             today = datetime.now().date()
             if self._last_sent_date != today:
-                try:
-                    print(f"[CareCircle] Sending automatic daily summary at {datetime.now():%H:%M}")
-                    self._send()
-                    self._last_sent_date = today
-                except Exception as e:
-                    print(f"[CareCircle] Daily summary failed: {e}")
+                for username in self._all_usernames():
+                    try:
+                        print(f"[CareCircle] Sending daily summary for '{username}' at {datetime.now():%H:%M}")
+                        self._send_for_user(username)
+                    except Exception as e:
+                        print(f"[CareCircle] Daily summary failed for '{username}': {e}")
+                self._last_sent_date = today
 
     def start(self) -> None:
         if not config.ENABLE_DAILY_SUMMARY:
